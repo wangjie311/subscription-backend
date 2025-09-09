@@ -125,6 +125,22 @@ app.post('/admin/airdrop', requireAdmin, async (req, res) => {
     return res.json({ id: rows[0].id });
   }
 });
+// 一键清空空投项（支持按分类或全部清空）
+// POST /admin/airdrop/clear  body: { category?: 'today' | 'upcoming' }
+app.post('/admin/airdrop/clear', requireAdmin, async (req, res) => {
+  const { category } = req.body || {};
+  try {
+    if (category === 'today' || category === 'upcoming') {
+      await pool.query('delete from airdrops where category=$1', [category]);
+    } else {
+      await pool.query('truncate table airdrops');
+    }
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => console.log('server on', port));
